@@ -16,6 +16,7 @@ queue_t *q_new()
         return NULL;
 
     q->head = NULL;
+    q->tail = NULL;
     q->size = 0;
     return q;
 }
@@ -71,7 +72,11 @@ bool q_insert_head(queue_t *q, char *s)
     /* LIFO */
     newh->next = q->head;
     q->head = newh;
+    /* Points tail to this element if this is the first element. */
+    if (q->size == 0)
+        q->tail = newh;
     q->size++;
+
     return true;
 }
 
@@ -84,10 +89,34 @@ bool q_insert_head(queue_t *q, char *s)
  */
 bool q_insert_tail(queue_t *q, char *s)
 {
-    /* TODO: You need to write the complete code for this function */
-    /* Remember: It should operate in O(1) time */
-    /* TODO: Remove the above comment when you are about to implement. */
-    return false;
+    list_ele_t *newh;
+
+    if (!q)
+        return false;
+
+    if ((newh = malloc(sizeof(list_ele_t))) == NULL)
+        return false;
+
+    if ((newh->value = malloc(strlen(s) + 1)) == NULL) {
+        /* Free this element if we allocat value space failed. */
+        free(newh);
+        return false;
+    }
+
+    strncpy(newh->value, s, strlen(s) + 1);
+    newh->value[strlen(s)] = '\0';
+    /* FIFO */
+    newh->next = NULL;
+    if (q->size == 0) {
+        /* Points head to this element if this is the first element. */
+        q->head = newh;
+    } else
+        q->tail->next = newh;
+    q->tail = newh;
+
+    q->size++;
+
+    return true;
 }
 
 /*
@@ -100,9 +129,28 @@ bool q_insert_tail(queue_t *q, char *s)
  */
 bool q_remove_head(queue_t *q, char *sp, size_t bufsize)
 {
-    /* TODO: You need to fix up this code. */
-    /* TODO: Remove the above comment when you are about to implement. */
+    list_ele_t *ele;
+    if (!q || !q->head)
+        return false;
+
+    ele = q->head;
     q->head = q->head->next;
+    q->size--;
+    if (q->size == 0)
+        q->tail = NULL;
+
+    if (sp) {
+        if (strlen(ele->value) > bufsize) {
+            strncpy(sp, ele->value, bufsize - 1);
+            sp[bufsize - 1] = '\0';
+        } else {
+            strncpy(sp, ele->value, strlen(ele->value));
+            sp[strlen(ele->value)] = '\0';
+        }
+    }
+    free(ele->value);
+    free(ele);
+
     return true;
 }
 
@@ -126,8 +174,54 @@ int q_size(queue_t *q)
  */
 void q_reverse(queue_t *q)
 {
-    /* TODO: You need to write the code for this function */
-    /* TODO: Remove the above comment when you are about to implement. */
+    list_ele_t *ele_prev, *ele_cur, *ele_next;
+    if (!q || !q->head)
+        return;
+
+    ele_prev = NULL;
+    q->tail = ele_cur = q->head;
+    while (ele_cur) {
+        ele_next = ele_cur->next;
+        ele_cur->next = ele_prev;
+        ele_prev = ele_cur;
+        ele_cur = ele_next;
+    }
+    q->head = ele_prev;
+}
+
+static list_ele_t *q_mergeSort(list_ele_t *start)
+{
+    if (!start || !start->next)
+        return start;
+
+    list_ele_t *left = start;
+    list_ele_t *right = start->next;
+    left->next = NULL;
+
+    left = q_mergeSort(left);
+    right = q_mergeSort(right);
+
+    for (list_ele_t *merge = NULL; left || right;) {
+        if (!right || (left && (strncmp(left->value, right->value,
+                                        strlen(left->value)) < 0))) {
+            if (!merge) {
+                start = merge = left;
+            } else {
+                merge->next = left;
+                merge = merge->next;
+            }
+            left = left->next;
+        } else {
+            if (!merge) {
+                start = merge = right;
+            } else {
+                merge->next = right;
+                merge = merge->next;
+            }
+            right = right->next;
+        }
+    }
+    return start;
 }
 
 /*
@@ -137,6 +231,17 @@ void q_reverse(queue_t *q)
  */
 void q_sort(queue_t *q)
 {
-    /* TODO: You need to write the code for this function */
-    /* TODO: Remove the above comment when you are about to implement. */
+    list_ele_t *elet;
+    if (!q || !q->head)
+        return;
+
+    if (q->size <= 1)
+        return;
+
+    q->head = q_mergeSort(q->head);
+    elet = q->head;
+    while (elet->next) {
+        elet = elet->next;
+    }
+    q->tail = elet;
 }
