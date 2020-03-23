@@ -211,8 +211,11 @@ static list_ele_t *q_mergeSort(list_ele_t *start)
 
     /* Merge */
     for (list_ele_t *merge = NULL; left || right;) {
-        if (!right || (left && (strncmp(left->value, right->value,
-                                        strlen(left->value)) < 0))) {
+        if (!right ||
+            (left && (strncmp(left->value, right->value,
+                              (strlen(left->value) > strlen(right->value))
+                                  ? strlen(left->value)
+                                  : strlen(right->value)) < 0))) {
             if (!merge) {
                 start = merge = left;
             } else {
