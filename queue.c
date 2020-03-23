@@ -194,13 +194,22 @@ static list_ele_t *q_mergeSort(list_ele_t *start)
     if (!start || !start->next)
         return start;
 
+    /* Divide */
     list_ele_t *left = start;
     list_ele_t *right = start->next;
+    while (right && right->next) {
+        /* If there are two more element remained, keep going */
+        right = right->next->next;
+        left = left->next;
+    }
+    right = left->next;
     left->next = NULL;
+    /* Now we divide whole queue into two equivalent length list */
 
-    left = q_mergeSort(left);
+    left = q_mergeSort(start);
     right = q_mergeSort(right);
 
+    /* Merge */
     for (list_ele_t *merge = NULL; left || right;) {
         if (!right || (left && (strncmp(left->value, right->value,
                                         strlen(left->value)) < 0))) {
