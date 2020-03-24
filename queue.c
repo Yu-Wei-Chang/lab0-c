@@ -206,34 +206,32 @@ static list_ele_t *q_mergeSort(list_ele_t *start)
     left->next = NULL;
     /* Now we divide whole queue into two equivalent length list */
 
+
     left = q_mergeSort(start);
     right = q_mergeSort(right);
 
     /* Merge */
-    for (list_ele_t *merge = NULL; left || right;) {
-        if (!right ||
-            (left && (strncmp(left->value, right->value,
-                              (strlen(left->value) > strlen(right->value))
-                                  ? strlen(left->value)
-                                  : strlen(right->value)) < 0))) {
-            if (!merge) {
-                start = merge = left;
-            } else {
-                merge->next = left;
-                merge = merge->next;
-            }
+    list_ele_t *return_head = NULL;
+    list_ele_t **tail_p = &return_head;
+    while (left && right) {
+        if (strcmp(left->value, right->value) < 0) {
+            (*tail_p) = left;
             left = left->next;
         } else {
-            if (!merge) {
-                start = merge = right;
-            } else {
-                merge->next = right;
-                merge = merge->next;
-            }
+            (*tail_p) = right;
             right = right->next;
         }
+        tail_p = &((*tail_p)->next);
     }
-    return start;
+
+    if (left) {
+        (*tail_p) = left;
+    }
+    if (right) {
+        (*tail_p) = right;
+    }
+
+    return return_head;
 }
 
 /*
@@ -243,7 +241,6 @@ static list_ele_t *q_mergeSort(list_ele_t *start)
  */
 void q_sort(queue_t *q)
 {
-    list_ele_t *elet;
     if (!q || !q->head)
         return;
 
@@ -251,9 +248,8 @@ void q_sort(queue_t *q)
         return;
 
     q->head = q_mergeSort(q->head);
-    elet = q->head;
-    while (elet->next) {
-        elet = elet->next;
+    q->tail = q->head;
+    while (q->tail->next) {
+        q->tail = q->tail->next;
     }
-    q->tail = elet;
 }
