@@ -3,7 +3,6 @@
 #include <string.h>
 
 #include "harness.h"
-#include "natsort/strnatcmp.h"
 #include "queue.h"
 
 /*
@@ -212,7 +211,11 @@ static list_ele_t *q_mergeSort(list_ele_t *start)
 
     /* Merge */
     for (list_ele_t *merge = NULL; left || right;) {
-        if (!right || (left && (strnatcmp(left->value, right->value) < 0))) {
+        if (!right ||
+            (left && (strncmp(left->value, right->value,
+                              (strlen(left->value) > strlen(right->value))
+                                  ? strlen(left->value)
+                                  : strlen(right->value)) < 0))) {
             if (!merge) {
                 start = merge = left;
             } else {
